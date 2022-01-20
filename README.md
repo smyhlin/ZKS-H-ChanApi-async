@@ -1,5 +1,5 @@
 [![PyPI version](https://badge.fury.io/py/hentai-chan-api-async.svg)](https://badge.fury.io/py/hentai-chan-api-async)
-
+![PyPI - License](https://img.shields.io/pypi/l/hentai-chan-api-async)
 
 # HentaiChanApi-async
 ## Wrapper over https://hentaichan.live
