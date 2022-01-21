@@ -21,7 +21,7 @@ def get_version():
     Read version
     :return: str
     """
-    txt = (WORK_DIR / 'hentai_chan_api-async' / '__init__.py').read_text('utf-8')
+    txt = (WORK_DIR / 'hentai_chan_api_async' / '__init__.py').read_text('utf-8')
     try:
         return re.findall(r"^__version__ = '([^']+)'\r?$", txt, re.M)[0]
     except IndexError:
