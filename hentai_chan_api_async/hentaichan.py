@@ -67,7 +67,7 @@ class HentaiChan:
         """
         url = f'{self._host}/tags'
         raw_tags = (await self.__get_site_content(url)).find_all('li', class_='sidetag')
-        tags = [tag.find_all('a')[-1].text for tag in raw_tags]
+        tags = [tag.find_all('a')[-1].text.replace(' ', '_') for tag in raw_tags]
 
         return tags
 
