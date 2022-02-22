@@ -7,5 +7,5 @@
 from .hentaichan import HentaiChan
 
 __author__ = 'JKearnsl'
-__version__ = '1.0.1'
+__version__ = '1.0.2'
 __email__ = 'pooolg@hotmail.com'
