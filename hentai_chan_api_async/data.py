@@ -9,6 +9,7 @@ class Manga:
     poster: str = None
     series: str = None
     author: str = None
+    original_url: str = None
     translator: str = None
     content: MangaContent = None
     tags: list = None
