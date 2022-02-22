@@ -1,5 +1,6 @@
 [![PyPI version](https://badge.fury.io/py/hentai-chan-api-async.svg)](https://badge.fury.io/py/hentai-chan-api-async)
 ![PyPI - License](https://img.shields.io/pypi/l/hentai-chan-api-async)
+[![CodeFactor](https://www.codefactor.io/repository/github/jkearnsl/hentaichanapi-async/badge)](https://www.codefactor.io/repository/github/jkearnsl/hentaichanapi-async)
 
 # HentaiChanApi-async
 ## Wrapper over https://hentaichan.live
@@ -44,9 +45,10 @@ async def main():
         print(el.series)  # 'Оригинальные работы'
         print(el.author)  # 'Sexgazers'
         print(el.translator)  # 'Zone'
-        print(await el.content.images)  # ['https://.../.png', 'https://.../.png'...]
+        print(await el.content.images())  # ['https://.../.png', 'https://.../.png'...]
         print(el.tags)  # ['анал', 'без цензуры', 'большая грудь', ...]
         print(el.date)  # '17 января 2022'
+        print(el.original_url) # 'https://...'
 
 
 asyncio.get_event_loop().run_until_complete(main())
@@ -71,7 +73,7 @@ async def main():
     manga = await hc.search(tag=tags[0])  # [Manga(id='40779-ms-i', title='Ms. I (Невыразимые секреты её прошлого)')...]
 
     print(manga[0].title)  # Ms. I (Невыразимые секреты её прошлого)
-    print(await manga[0].content.images)  # ['https://mimg2.imgschan.xyz/manganew/m/1641154521_ms.-i/001.jpg', ...]
+    print(await manga[0].content.images())  # ['https://mimg2.imgschan.xyz/manganew/m/1641154521_ms.-i/001.jpg', ...]
 
 
 asyncio.get_event_loop().run_until_complete(main())
@@ -86,11 +88,10 @@ from hentai_chan_api_async import HentaiChan
 
 async def main():
     hc = HentaiChan()
-
-    manga = await hc.search(page_num=3, query='bikini')  # [Manga(...)...]
+    manga = await hc.search(query='bikini')  # [Manga(...)...]
     
     print(manga[0].title)  # Bikini's Bottom
-    print(await manga[0].content.images)  # ['https://mimg2.imgschan.xyz/manganew/l/1630962513_lightsource-bik...', ...]
+    print(await manga[0].content.images())  # ['https://mimg2.imgschan.xyz/manganew/l/1630962513_lightsource-bik...', ...]
 
 
 asyncio.get_event_loop().run_until_complete(main())
