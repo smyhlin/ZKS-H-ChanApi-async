@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from .parsers.parser import MangaContent
+from .parsers.content import MangaContent
 
 
 @dataclass
