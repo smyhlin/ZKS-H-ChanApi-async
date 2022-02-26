@@ -1,11 +1,11 @@
 import asyncio
-import re
 
-from .data import Manga
-from .content_parser import MangaContent
 from bs4 import BeautifulSoup
 
 from .http import Http
+from .parsers import page
+from .data import Manga
+from .parsers.parser import MangaContent
 
 
 class HentaiChan:
@@ -18,7 +18,7 @@ class HentaiChan:
     def __init__(self, proxies: dict = None):
         self._proxy = proxies
 
-    async def __get_site_content(self, url: str, params: dict = None) -> BeautifulSoup:
+    async def __bs_request(self, url: str, params: dict = None) -> BeautifulSoup:
         async with Http(headers=self._headers) as http:
             html = await http.get(url, params=params)
         return BeautifulSoup(html, 'html.parser')
@@ -37,41 +37,58 @@ class HentaiChan:
 
         offset = page_num * 20 - 20
         url = self._host + '/manga/new'
-        return await self.__get_search_content(url, offset, count)
+        return await self.__get_manga_list(url, count, offset)
 
-    async def search(self, page_num: int = 1, count: int = 20, query: str = None, tag: str = None) -> list[Manga]:
+    async def search(self, query: str = None, tag: str = None, page_num: int = 1, count: int = 20) -> list[Manga]:
+        """
+        Метод используется для осуществления поиска манги
+
+        Доступен поиск как по ключевым фразам (query), так и по тегам (tag)
+
+        :param page_num:
+        :param count:
+        :param query:
+        :param tag:
+        :return:
+        """
         assert page_num >= 1, ValueError("Значение page_num не может быть меньше 1")
         assert count <= 20, ValueError("Значение count не может быть больше 20")
 
         offset = page_num * 20 - 20
         if tag:
-            return await self.__get_search_content(f'{self._host}/tags/{tag}', count=count, offset=offset)
+            return await self.__get_manga_list(f'{self._host}/tags/{tag}', count=count, offset=offset)
         elif query:
             params = {'do': 'search', 'subaction': 'search', 'story': query}
-            return await self.__get_search_content(f'{self._host}/', count=count, offset=offset, params=params)
+            return await self.__get_manga_list(f'{self._host}/', count=count, offset=offset, params=params)
         elif tag and query:
             raise ValueError('Метод search получил сразу 2 аргумента для поиска, допустим только 1')
         else:
             raise ValueError('Метод search не получил аргументов для поиска')
 
-    async def get_all_tags(self) -> list[str]:
+    async def tags(self) -> list[str]:
         """
         Метод возвращает список всех tags
-        упомянутых на сайте
+        доступных на сайте
 
         :return:
         """
-        url = f'{self._host}/tags'
-        raw_tags = (await self.__get_site_content(url)).find_all('li', class_='sidetag')
-        tags = [tag.find_all('a')[-1].text.replace(' ', '_') for tag in raw_tags]
+        url = f'{self._host}/tags/'
+        soup_content = await self.__bs_request(url)
+        return page.parse_tags(soup_content)
 
-        return tags
+    async def random(self, count=1) -> list[Manga]:
+        """
+        Метод возвращает рандомные manga в формате list[manga]
+        Параметр count регулирует кол-во выданной манги за раз,
+        причем count варьируется от 1 до 20.
 
-    async def random(self, count) -> list[Manga]:
+        :param count: [1; 20]
+        :return:
+        """
         url = f'{self._host}/manga/random'
-        return await self.__get_search_content(url, count)
+        return await self.__get_manga_list(url, count)
 
-    async def get_manga(self, manga_id: str) -> Manga:
+    async def manga(self, manga_id: str) -> Manga:
         """
         Метод возвращает объект Manga
 
@@ -79,36 +96,13 @@ class HentaiChan:
         :return:
         """
         url = f'{self._host}/manga/{manga_id}.html'
-        content = await self.__get_site_content(url)
+        content = await self.__bs_request(url)
 
-        dle_content = content.find('div', id='content').find('div', id='dle-content')
-        side_content = content.find('div', id='side')
-
-        m = Manga(id=manga_id)
-        m.poster = dle_content.find('div', id='manga_images').find('img').attrs.get('src')
-        m.title = dle_content.find('div', id='info_wrap').find('a', class_='title_top_a').string
-        m.date = dle_content.find('div', class_='row4_right').find('b').string
-
-        info_rows = dle_content.find('div', id='info_wrap').find_all('div', class_='row')
-        for el in info_rows:
-            if el.find('div', class_='item').string == 'Аниме/манга':
-                m.series = el.find('a').string
-            elif el.find('div', class_='item').string == 'Автор':
-                m.author = el.find('a').string
-            elif el.find('div', class_='item').string == 'Переводчик':
-                m.translator = el.find('a').string
-
-        tags = []
-        tags_table = side_content.find_all('li', class_='sidetag')
-        for tag in tags_table:
-            tags.append(((tag.find_all('a'))[-1]).string.replace(' ', '_'))
-
-        m.tags = tags
-        m.original_url = f'{self._host}/online/{m.id}.html'
-        m.content = await self.__get_manga_content(m)
+        m = page.parse_manga(bs_content=content, manga_id=manga_id, host=self._host)
+        m.content = MangaContent(self.__bs_request, manga=m)
         return m
 
-    async def __get_search_content(self, url: str, count: int, offset: int = 20, params: dict = {}) -> list[Manga]:
+    async def __get_manga_list(self, url: str, count: int, offset: int = 20, params: dict = {}) -> list[Manga]:
         """
         Вспомогательный метод, используется для парсинга манги из поисковой выдачи
 
@@ -117,29 +111,8 @@ class HentaiChan:
         :param params: params для url
         :return:
         """
-        soup_content = await self.__get_site_content(url, params={**params, 'offset': offset})
-        elements = soup_content.find('div', id='content').find_all('div', class_='content_row')[:count]
+        soup_content = await self.__bs_request(url, params={**params, 'offset': offset})
+        manga_ids = page.parse_manga_ids(bs_content=soup_content, count=count, host=self._host)
 
-        content = []
-        for el in elements:
-            el_div_with_manga_id = el.find('div', class_='manga_row1')
-            if el_div_with_manga_id.find('a', class_='title_link'):
-                href = el_div_with_manga_id.find('a', class_='title_link').attrs.get('href')
-            else:
-                href = el_div_with_manga_id.find('a').attrs.get('href').replace(self._host, '')
-
-            _id = re.search(r'/(.+)/(.+).html', href)
-            if _id.group(1) == 'manga':
-                content.append(_id.group(2))
-
-        manga_list = await asyncio.gather(*(self.get_manga(manga_id) for manga_id in content))
+        manga_list = await asyncio.gather(*(self.manga(manga_id) for manga_id in manga_ids))
         return manga_list
-
-    async def __get_manga_content(self, manga: Manga) -> MangaContent:
-        """
-        Вспомогательный метод для парсинга контента манги
-
-        :param manga: Manga class
-        :return:
-        """
-        return MangaContent(get_site_content_method=self.__get_site_content, manga=manga)
