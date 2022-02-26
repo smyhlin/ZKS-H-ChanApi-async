@@ -5,7 +5,7 @@ from bs4 import BeautifulSoup
 from .http import Http
 from .parsers import page
 from .data import Manga
-from .parsers.parser import MangaContent
+from .parsers.content import MangaContent
 
 
 class HentaiChan:
