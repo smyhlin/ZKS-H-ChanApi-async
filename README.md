@@ -69,7 +69,7 @@ from hentai_chan_api_async import HentaiChan
 async def main():
     hc = HentaiChan()
 
-    tags = await hc.get_all_tags()  # ['3D', 'action', 'ahegao', 'bdsm', 'corruption', ...]
+    tags = await hc.tags()  # ['3D', 'action', 'ahegao', 'bdsm', 'corruption', ...]
     manga = await hc.search(tag=tags[0])  # [Manga(id='40779-ms-i', title='Ms. I (Невыразимые секреты её прошлого)')...]
 
     print(manga[0].title)  # Ms. I (Невыразимые секреты её прошлого)
