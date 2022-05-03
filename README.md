@@ -9,7 +9,7 @@ hentai-chan-api-async is a small asynchronous parser library
 that will allow you to easily use manga from https://hentaichan.live
 Recommended to use python3.7+
 
-Sync version: [@HentaiChanApi](https://github.com/JKearnsl/HentaiChanApi)
+Sync version: [@HentaiChanApi](https://github.com/JKearnsl/HentaiChanApi) - archived
 
 ## Install
 
