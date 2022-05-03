@@ -1,14 +1,8 @@
-import functools
 import pathlib
 import re
 import sys
 
-from setuptools import setup
-
-try:
-    from pip.req import parse_requirements
-except ImportError:  # pip >= 10.0.0
-    from pip._internal.req import parse_requirements
+from setuptools import setup, find_packages
 
 WORK_DIR = pathlib.Path(__file__).parent
 
@@ -40,30 +34,11 @@ def get_version():
         raise RuntimeError('Unable to determine version.')
 
 
-def get_requirements(filename=None):
-    """
-    Read requirements from 'requirements txt'
-    :return: requirements
-    :rtype: list
-    """
-    if filename is None:
-        filename = 'requirements.txt'
-
-    file = WORK_DIR / filename
-
-    install_reqs = parse_requirements(str(file), session='hack')
-    try:
-        requirements = [str(ir.req) for ir in install_reqs]
-    except AttributeError:
-        requirements = [str(ir.requirement) for ir in install_reqs]
-    return requirements
-
-
 setup(
     name='hentai_chan_api_async',
     version=get_version(),
-    packages=['hentai_chan_api_async'],
-    install_requires=get_requirements(),
+    packages=find_packages(),
+    install_requires=["aiohttp>=3.7.4", "beautifulsoup4>=4.10.0", "aiograph>=0.2", "attrs==19.1.0"],
     url='https://github.com/JKearnsl/HentaiChanApi-async',
     license='MIT',
     classifiers=[
