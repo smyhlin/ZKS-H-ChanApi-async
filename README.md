@@ -2,6 +2,7 @@
 ![PyPI - License](https://img.shields.io/pypi/l/hentai-chan-api-async)
 [![CodeFactor](https://www.codefactor.io/repository/github/jkearnsl/hentaichanapi-async/badge)](https://www.codefactor.io/repository/github/jkearnsl/hentaichanapi-async)
 
+
 # HentaiChanApi-async
 ## Wrapper over https://hentaichan.live
 
@@ -95,4 +96,40 @@ async def main():
 
 
 asyncio.get_event_loop().run_until_complete(main())
+```
+
+Get manga by id method example with new related funciton example:
+```Python
+import asyncio
+from zkshentai_chan_api_async import HentaiChan
+
+
+async def main():
+    hc = HentaiChan()
+
+    id = '41136-ledi-k-i-podavlennyy-muzhchina-glava-15'
+    el = await hc.manga(id)
+
+    print(el.id)  # '40918-doll-house-glava-2'
+    print(el.title)  # 'Леди К и Подавленный Мужчина - Глава 1.5 (Kko to yamioji)'
+    print(el.poster)  # https://imgcover.../.../01.jpg'
+    print(el.series)  # 'Оригинальные работы'
+    print(el.author)  # 'Rororogi Mogera'
+    print(el.translator)  # 'Amunezqa'
+
+    # HentaiChan Very clever and naming their 1.5 chapters url`s as 15
+    print(el.related)  # ['https://.../glava-1.html', 'https://.../glava-15.html', 'https://.../glava-2.html'...]
+    # But when it is over 20+ chapters related chapters parser due to async work get unsorted list so...
+    # Under 15 chapters sort unneeded
+    el_sorted = await hc.manga(id, rel_sort=True)
+    print(el_sorted.related) # ['https://.../glava-1.html', 'https://.../glava-2.html'... 'https://.../glava-15.html'...]
+
+    # print(await el.content.images())  # ['https://.../.png', 'https://.../.png'...]
+    print(el.tags)  # ['анал', 'без цензуры', 'большая грудь', ...]
+    print(el.date)  # '07 февраля 2022'
+    print(el.original_url) # 'https://...'
+
+
+asyncio.get_event_loop().run_until_complete(main())
+
 ```
